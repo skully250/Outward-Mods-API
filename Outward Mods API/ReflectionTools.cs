@@ -5,65 +5,57 @@ using UnityEngine;
 
 namespace OModAPI
 {
-    static class ReflectionTools
+    public static class ReflectionTools
     {
-        private static Dictionary<string, MemberInfo> reflectedInfo = new Dictionary<string, MemberInfo>();
+        private static Dictionary<string, object> reflectedInfo = new Dictionary<string, object>();
 
-        /// <summary>
-        /// Get a private method from the class passed in.
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <param name="methodName"></param>
-        /// <returns></returns>
-        public static MethodInfo GetMethod(Type instance, string methodName)
+        public static MethodInfo GetMethod(object instance, string methodName)
         {
+            return GetBase<MethodInfo>(instance.GetType(), methodName, OPTIONS.Method);
+        }
+
+        public static FieldInfo GetField(object instance, string fieldName)
+        {
+            return GetBase<FieldInfo>(instance.GetType(), fieldName, OPTIONS.Field);
+        }
+
+        private static T GetBase<T>(Type instance, string pName, OPTIONS opt)
+        {
+            string fullName = instance.ToString() + "#" + pName;
+
             try
             {
-                if (reflectedInfo.ContainsKey(methodName))
-                    if (reflectedInfo[methodName] is MethodInfo)
-                        return (MethodInfo)reflectedInfo[methodName];
+                if (reflectedInfo.ContainsKey(fullName))
+                    if (reflectedInfo[fullName] is T)
+                        return (T)reflectedInfo[fullName];
                     else
-                        throw new Exception(String.Format("{0} ({1}) was expected to be a MethodInfo, but wasn't", methodName, reflectedInfo[methodName].ToString()));
+                        throw new Exception(String.Format("{0} ({1}) was expected to be a MethodInfo, but wasn't", fullName, reflectedInfo[fullName].ToString()));
 
-                // methodName can come from an untrusted source, so handle if it doesn't actually exist.
-                MethodInfo toAdd = instance.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-                reflectedInfo.Add(methodName, toAdd);
-                return toAdd;
+                object toAdd;
+
+                if (opt == OPTIONS.Field)
+                    toAdd = instance.GetField(pName, BindingFlags.Instance | BindingFlags.NonPublic);
+                else if (opt == OPTIONS.Method)
+                    toAdd = instance.GetMethod(pName, BindingFlags.Instance | BindingFlags.NonPublic);
+                else
+                    throw new ArgumentException(String.Format("Option {0} is not valid", opt));
+
+                reflectedInfo.Add(fullName, toAdd);
+                return (T)toAdd;
             }
+            // name can come from an untrusted source, so handle if it doesn't actually exist.
             catch (NullReferenceException e)
             {
-                Debug.Log(String.Format("Method {0} was not found in type {1}", methodName, instance));
+                Debug.Log(String.Format("Method {0} was not found in type {1}", pName, instance));
                 Debug.Log(e.StackTrace);
-                return null;
+                return default(T);
             }
         }
 
-        /// <summary>
-        /// Get a private field from the class passed in.
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
-        public static FieldInfo GetField(Type instance, string fieldName)
+        enum OPTIONS
         {
-            try
-            {
-                if (reflectedInfo.ContainsKey(fieldName))
-                    if (reflectedInfo[fieldName] is FieldInfo)
-                        return (FieldInfo)reflectedInfo[fieldName];
-                    else
-                        throw new Exception(String.Format("{0} ({1}) was expected to be a FieldInfo, but wasn't", fieldName, reflectedInfo[fieldName].ToString()));
-
-                FieldInfo toAdd = instance.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-                reflectedInfo.Add(fieldName, toAdd);
-                return toAdd;
-            }
-            catch (NullReferenceException e)
-            {
-                Debug.Log(String.Format("Field {0} was not found in type {1}", fieldName, instance));
-                Debug.Log(e.StackTrace);
-                return null;
-            }
+            Field,
+            Method
         }
     }
 }
