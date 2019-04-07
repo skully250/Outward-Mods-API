@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace OModAPI
 {
-    class ConfigHelper
+    public class ConfigHelper
     {
         // Default path is Outward/Config
         private static string basePath = Path.Combine(Directory.GetCurrentDirectory(), "Config");
@@ -19,7 +19,7 @@ namespace OModAPI
 
 
         #region Constructors
-        public ConfigHelper() {}
+        public ConfigHelper() { }
 
         public ConfigHelper(ConfigModes mode)
         {
@@ -69,7 +69,7 @@ namespace OModAPI
             }
             configDoc.Load(FullPath);
         }
-        
+
         public float ReadFloat(string xpath)
         {
             float res;
