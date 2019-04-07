@@ -10,12 +10,13 @@ namespace OModAPI
     public class ConfigHelper
     {
         // Default path is Outward/Config
-        private static string basePath = Path.Combine(Directory.GetCurrentDirectory(), "Config");
+        private string basePath = Path.Combine(Directory.GetCurrentDirectory(), "Config");
         private string configName;
         // Default mode is read only
         private ConfigModes mode = ConfigModes.ReadOnly;
         private XmlDocument configDoc;
         private string xmlConfigDefault;
+        private string configDirectory = "\\Config";
 
 
         #region Constructors
@@ -29,45 +30,70 @@ namespace OModAPI
         public ConfigHelper(ConfigModes mode, string configName)
         {
             this.mode = mode;
-            init(basePath, configName);
+            this.configName = configName;
         }
         public ConfigHelper(string configName)
         {
-            init(basePath, configName);
+            this.configName = configName;
         }
 
-        public ConfigHelper(string configName, string locBasePath)
+        public ConfigHelper(string configName, string basePath)
         {
-            init(locBasePath, configName);
+            this.configName = configName;
+            this.basePath = basePath;
         }
 
-        public ConfigHelper(ConfigModes mode, string configName, string locBasePath)
+        public ConfigHelper(ConfigModes mode, string configName, string basePath)
         {
             this.mode = mode;
-            init(locBasePath, configName);
+            this.basePath = basePath;
+            this.configName = configName;
         }
 
         #endregion
 
-        private void init(string locBasePath, string configName)
+        public void Init()
         {
             // Create the config directory if it doesn't exist
-            if (!Directory.Exists(Directory.GetCurrentDirectory() + "\\Config"))
-                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "\\Config");
+            if (!Directory.Exists(basePath))
+            {
+                // File system operations are slow, so we can't guarantee that the directory will be created 
+                // before we try to create the file
+                FileSystemWatcher watcher = new FileSystemWatcher();
+                watcher.Path = Directory.GetCurrentDirectory();
+                watcher.Created += watcherCreated;
+                watcher.EnableRaisingEvents = true;
 
-            this.configName = configName;
+                Directory.CreateDirectory(basePath);
+                return;
+            }
+
             configDoc = new XmlDocument();
 
             // Handle if the config file we're looking for doesn't actually exist
             if (!File.Exists(FullPath))
             {
                 // Check if we allow creation
-                if (mode != ConfigModes.CreateIfMissing)
-                    throw new IOException(string.Format("Config file {0} doesn't exist, and ConfigMode doesn't permit creation.", FullPath));
-
-                CreateDefault(locBasePath, configName);
+                if (mode == ConfigModes.CreateIfMissing)
+                    CreateDefault();
+                throw new IOException(string.Format("Config file {0} doesn't exist, and ConfigMode doesn't permit creation.", FullPath));
             }
-            configDoc.Load(FullPath);
+            try
+            {
+                configDoc.Load(FullPath);
+            }
+            catch(FileNotFoundException e)
+            {
+                throw new FileNotFoundException("Can't find config file: " + FullPath);
+            }
+        }
+
+        private void watcherCreated(object sender, FileSystemEventArgs e)
+        {
+            // Wait for the directory we want to create to actually be created
+            if (configDirectory.Contains(e.Name) || e.Name.Contains(configDirectory) || e.Name.Equals(configDirectory))
+                // When that happens, re-call Init, since it will skip the creating this time
+                Init();
         }
 
         public float ReadFloat(string xpath)
@@ -91,14 +117,32 @@ namespace OModAPI
 
         public XmlNode ReadNode(string xpath)
         {
+            // If Init() hasn't been called by the time we try to read a value, call it
             if (configDoc == null)
-                return null;
+                Init();
             return configDoc.SelectSingleNode(xpath);
         }
 
-        private void CreateDefault(string locBasePath, string configName)
+        /// <summary>
+        /// Write the default xml to the config file, if specified.
+        /// This allows easy storing of defaults, so users don't have to go look up 
+        /// what the config file looks like.
+        /// </summary>
+        /// <param name="locBasePath"></param>
+        /// <param name="configName"></param>
+        private void CreateDefault()
         {
-            // TODO: This method
+            try
+            {
+                // This is okay to do because we never get here unless the config file doesn't exist
+                File.WriteAllText(FullPath, xmlConfigDefault);
+            }
+            catch(Exception e)
+            {
+                // This is bad practice, but I want to make sure the exception gets passed up to the individual mod
+                // so people don't think it's the API's fault.
+                throw e;
+            }
         }
 
         // Accessors
@@ -107,16 +151,20 @@ namespace OModAPI
             get { return xmlConfigDefault; }
             set { this.xmlConfigDefault = value; }
         }
-
         public string FullPath
         {
             get { return Path.Combine(basePath, configName); }
         }
-
         public ConfigModes Mode
         {
             get { return mode; }
-            set { this.mode = value; }
+        }
+        /// <summary>
+        /// Expose the actual XmlDocument to allow for people to implement their own methods if need be.
+        /// </summary>
+        public XmlDocument ConfigDoc
+        {
+            get { return configDoc; }
         }
 
         public enum ConfigModes
