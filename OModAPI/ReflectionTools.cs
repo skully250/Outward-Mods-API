@@ -7,19 +7,19 @@ namespace OModAPI
 {
     public static class ReflectionTools
     {
-        private static Dictionary<string, object> reflectedInfo = new Dictionary<string, object>();
+        private static Dictionary<string, object>  reflectedInfo = new Dictionary<string, object>();
 
-        public static MethodInfo GetMethod(object instance, string methodName)
+        public static MethodInfo GetMethod(Type instance, string methodName, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic)
         {
-            return GetBase<MethodInfo>(instance.GetType(), methodName, OPTIONS.Method);
+            return GetBase<MethodInfo>(instance, methodName, OPTIONS.Method, bindingFlags);
         }
 
-        public static FieldInfo GetField(object instance, string fieldName)
+        public static FieldInfo GetField(Type instance, string fieldName, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic)
         {
-            return GetBase<FieldInfo>(instance.GetType(), fieldName, OPTIONS.Field);
+            return GetBase<FieldInfo>(instance, fieldName, OPTIONS.Field, bindingFlags);
         }
 
-        private static T GetBase<T>(Type instance, string pName, OPTIONS opt)
+        private static T GetBase<T>(Type instance, string pName, OPTIONS opt, BindingFlags bindingFlags)
         {
             string fullName = instance.ToString() + "#" + pName;
 
@@ -29,14 +29,14 @@ namespace OModAPI
                     if (reflectedInfo[fullName] is T)
                         return (T)reflectedInfo[fullName];
                     else
-                        throw new Exception(String.Format("{0} ({1}) was expected to be a MethodInfo, but wasn't", fullName, reflectedInfo[fullName].ToString()));
+                        throw new Exception(String.Format("{0} ({1}) was expected to be a {2}, but wasn't", fullName, reflectedInfo[fullName].ToString(), typeof(T)));
 
                 object toAdd;
 
                 if (opt == OPTIONS.Field)
-                    toAdd = instance.GetField(pName, BindingFlags.Instance | BindingFlags.NonPublic);
+                    toAdd = instance.GetField(pName, bindingFlags);
                 else if (opt == OPTIONS.Method)
-                    toAdd = instance.GetMethod(pName, BindingFlags.Instance | BindingFlags.NonPublic);
+                    toAdd = instance.GetMethod(pName, bindingFlags);
                 else
                     throw new ArgumentException(String.Format("Option {0} is not valid", opt));
 
@@ -46,7 +46,7 @@ namespace OModAPI
             // name can come from an untrusted source, so handle if it doesn't actually exist.
             catch (NullReferenceException e)
             {
-                Debug.Log(String.Format("Method {0} was not found in type {1}", pName, instance));
+                Debug.Log(String.Format("{0} {1} was not found in type {2}", typeof(T), pName, instance));
                 Debug.Log(e.StackTrace);
                 return default(T);
             }
