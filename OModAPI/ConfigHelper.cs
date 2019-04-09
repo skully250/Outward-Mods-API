@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Xml;
+using System.Xml.XPath;
 
 namespace OModAPI
 {
@@ -17,7 +15,8 @@ namespace OModAPI
         private XmlDocument configDoc;
         private string xmlConfigDefault;
         private string configDirectory = "\\Config";
-
+        private FileSystemWatcher directoryWatcher = new FileSystemWatcher();
+        private FileSystemWatcher fileWatcher = new FileSystemWatcher();
 
         #region Constructors
         public ConfigHelper() { }
@@ -59,10 +58,10 @@ namespace OModAPI
             {
                 // File system operations are slow, so we can't guarantee that the directory will be created 
                 // before we try to create the file
-                FileSystemWatcher watcher = new FileSystemWatcher();
-                watcher.Path = Directory.GetCurrentDirectory();
-                watcher.Created += watcherCreated;
-                watcher.EnableRaisingEvents = true;
+
+                directoryWatcher.Path = Directory.GetCurrentDirectory();
+                directoryWatcher.Created += watcherCreated;
+                directoryWatcher.EnableRaisingEvents = true;
 
                 Directory.CreateDirectory(basePath);
                 return;
@@ -75,8 +74,15 @@ namespace OModAPI
             {
                 // Check if we allow creation
                 if (mode == ConfigModes.CreateIfMissing)
+                {
+                    fileWatcher.Path = basePath;
+                    fileWatcher.Created += watcherCreated;
+                    fileWatcher.EnableRaisingEvents = true;
                     CreateDefault();
-                throw new IOException(string.Format("Config file {0} doesn't exist, and ConfigMode doesn't permit creation.", FullPath));
+                    return;
+                }
+                else
+                    throw new IOException(string.Format("Config file {0} doesn't exist, and ConfigMode doesn't permit creation.", FullPath));
             }
             try
             {
@@ -86,12 +92,17 @@ namespace OModAPI
             {
                 throw new FileNotFoundException("Can't find config file: " + FullPath);
             }
+            catch(XmlException e)
+            {
+                // Do nothing, which is bad practice
+            }
         }
 
         private void watcherCreated(object sender, FileSystemEventArgs e)
         {
             // Wait for the directory we want to create to actually be created
-            if (configDirectory.Contains(e.Name) || e.Name.Contains(configDirectory) || e.Name.Equals(configDirectory))
+            if ((configDirectory.Contains(e.Name) || e.Name.Contains(configDirectory) || e.Name.Equals(configDirectory)) ||
+                configName.Contains(e.Name) || e.Name.Contains(configName) || e.Name.Equals(configName))
                 // When that happens, re-call Init, since it will skip the creating this time
                 Init();
         }
@@ -112,6 +123,9 @@ namespace OModAPI
 
         public string ReadString(string xpath)
         {
+            XmlNode curNode = ReadNode(xpath);
+            if (curNode == null)
+                return null;
             return ReadNode(xpath).InnerText;
         }
 
@@ -121,6 +135,49 @@ namespace OModAPI
             if (configDoc == null)
                 Init();
             return configDoc.SelectSingleNode(xpath);
+        }
+
+        public void WriteValue(string xpath, string value)
+        {
+            WriteToXml(xpath, value);
+        }
+
+        public void WriteToXml(string xpath, string value)
+        {
+            if (configDoc == null)
+                Init();
+
+            // Break up the path into parts
+            string[] paths;
+            if (xpath.Contains("/"))
+                paths = xpath.Split('/');
+            else
+                paths = new string[] { xpath };
+
+            XmlNode curNode = configDoc;
+            XPathNavigator nav = configDoc.CreateNavigator();
+            foreach(string s in paths)
+            {
+                // Skip blank paths
+                if (s.Equals(""))
+                    continue;
+
+                // Try to move down the hierarchy, if we can't then create the nodes
+                bool moveSuccess = nav.MoveToChild(s, "");
+                if (!moveSuccess)
+                {
+                    XmlWriter pages = nav.AppendChild();
+                    pages.WriteElementString(s, "");
+                    pages.Close();
+                    // Actually move to the new node
+                    nav.MoveToChild(s, "");
+                }
+            }
+            // Set the value at the end
+            nav.SetValue(value);
+            
+            // Save the resulting changes
+            configDoc.Save(FullPath);
         }
 
         /// <summary>

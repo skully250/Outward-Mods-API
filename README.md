@@ -19,6 +19,11 @@ public void Initialize()
 
 	float baseSneakSpeed = configHelper.ReadFloat("/config/baseSneakSpeed");
 	float stealthTrainingBonus = configHelper.ReadFloat("/config/stealthTrainingBonus");
+	
+	configHelper.WriteValue("/config/test", "write value 1");
+
+	for(int i = 0; i < 10; ++i)
+		configHelper.WriteValue("/config/loopValues/val_" + i, i.ToString());
 }
 ```
 
