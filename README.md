@@ -77,7 +77,7 @@ OLogger.DestroyUIPanel(string _panel); //this will destroy the "_panel" panel;
 OLogger.Warning(object _obj, string _panel = "Default"); //this will output yellow text to the "_panel" panel
 OLogger.Error(object _obj, string _panel = "Default"); //this will output red text to the "_panel" panel
 
-//Example Turn Unity Debug In OLogger Debug:
+//Example Turn Unity Debug Into OLogger Debug:
 public void Update()
 {
 	
