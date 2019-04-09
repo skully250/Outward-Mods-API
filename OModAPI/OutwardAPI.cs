@@ -9,7 +9,7 @@ namespace OModAPI
         {
             this.ModID = "";
             this.Version = "0110";
-            this.author = "Faedar, Elec0";
+            this.author = "Faedar, Elec0, JoshF67";
         }
 
         public static APILoad APILoader;
@@ -21,6 +21,9 @@ namespace OModAPI
             GameObject obj = new GameObject();
             APILoader = obj.AddComponent<APILoad>();
             APILoader.Initialise();
+
+            //Used to set the parent of all debug boxes to obj
+            OLogger.SetupObject(obj);
         }
     }
 }
