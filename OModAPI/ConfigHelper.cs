@@ -109,16 +109,12 @@ namespace OModAPI
 
         public float ReadFloat(string xpath)
         {
-            float res;
-            float.TryParse(ReadString(xpath), out res);
-            return res;
+            return float.Parse(ReadString(xpath));
         }
 
         public int ReadInt(string xpath)
         {
-            int res;
-            int.TryParse(ReadString(xpath), out res);
-            return res;
+            return int.Parse(ReadString(xpath));
         }
 
         public string ReadString(string xpath)
