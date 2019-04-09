@@ -203,7 +203,7 @@ namespace OModAPI
                     break;
                 }
                 //add color + message + newline to text
-                output += "<color=#" + textLines[a].messageColor + ">" + textLines[a].message + "</color>";
+                output += (msgCount - a).ToString() + ": <color=#" + textLines[a].messageColor + ">" + textLines[a].message + "</color>";
                 output += Environment.NewLine;
             }
 
