@@ -62,8 +62,10 @@ namespace OModAPI
 
         public void OnApplicationQuit()
         {
-            writer.WriteLine("Hey it really does work");
-            writer.Close();
+            if (writer != null)
+            {
+                writer.Close();
+            }
             textLines.Clear();
         }
 
@@ -77,6 +79,11 @@ namespace OModAPI
             //debug info to file
             if (writeToDisk)
             {
+                if (writer == null)
+                {
+                    OLogger.SetupDirectory();
+                    writer = new StreamWriter("mods/Debug/" + BoxName + ".txt", true);
+                }
                 writer.WriteLine("Message: " + _msg + ", " + msgCount.ToString());
             }
 
@@ -151,8 +158,48 @@ namespace OModAPI
             {
                 //check if output is past a certain length to stop the
                 //text getting cut off mid way
-                if (output.Length > 1500)
+                if (output.Length > 3000)
                 {
+                    if (output.Length > 6000)
+                    {
+
+                        OLogger.CreateLog(new Rect(Screen.width - 400, 50, 400, 400), "Time to split tester", false, true);
+                        float curTime = Time.time;
+                        //get how many characters passed this is
+                        int charactersPassed = output.Length - 6000;
+
+                        //split to character array 
+                        string[] outputSplit = output.Split('>');
+                        char[] lastLineSplit = outputSplit[outputSplit.Length].ToCharArray();
+
+                        //set end of array to nothing
+                        outputSplit.SetValue("", outputSplit.Length - 1);
+
+                        //calculate how many characters need to be copied
+                        int length = (lastLineSplit.Length - charactersPassed) - 10;
+
+                        //loop through character array and copy values
+                        char[] lastLineRecreated = new char[length];
+                        for (int charFill = 0; charFill < length; charFill++)
+                        {
+                            lastLineRecreated[charFill] = lastLineSplit[charFill];
+                        }
+
+                        //loop through strings and setup output string
+                        if (outputSplit.Length > 0)
+                        {
+                            output = "";
+                            for (int stringToAdd = 0; stringToAdd < outputSplit.Length; stringToAdd++)
+                            {
+                                output += outputSplit[stringToAdd];
+                            }
+
+                            //add ending </color> to line
+                            output += new string(lastLineRecreated) + "</color>";
+                        }
+
+                        OLogger.Log((Time.time - curTime).ToString(), null, "Time to split tester");
+                    }
                     break;
                 }
                 //add color + message + newline to text
@@ -161,7 +208,8 @@ namespace OModAPI
             }
 
             //print text and then end the area
-            GUILayout.TextArea(output, 2000, style, GUILayout.Height(windowRect.height - 40));
+            style.wordWrap = true;
+            GUILayout.TextArea(output, 6000, style, GUILayout.Height(windowRect.height - 40));
             GUILayout.EndArea();
 
         }

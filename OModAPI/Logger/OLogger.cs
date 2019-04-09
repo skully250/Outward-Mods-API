@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.UI;
-using OModAPI;
 
 namespace OModAPI
 {
@@ -16,6 +13,43 @@ namespace OModAPI
         private static Dictionary<string, DebugBox> debugPanels = new Dictionary<string, DebugBox>();
         private static int currentGUIID = 0;
         private static GameObject m_obj;
+
+        public static IgnoreData ignoreList = new IgnoreData();
+
+        public static void DebugMethodHook(string logString, string stackTrace, LogType type)
+        {
+            foreach (string _toCheck in ignoreList.ignoreInDefaultCompiler)
+            {
+                if (logString.Contains(_toCheck))
+                {
+                    return;
+                }
+            }
+
+            switch (type)
+            {
+                case LogType.Assert:
+                    Log(logString, "00ff0ff", "Default Unity Compiler");
+                    break;
+                case LogType.Error:
+                    Error(logString, "Default Unity Compiler");
+                    break;
+                case LogType.Exception:
+                    Log(logString, "9999ffff", "Default Unity Compiler");
+                    break;
+                case LogType.Log:
+                    Log(logString, null, "Default Unity Compiler");
+                    break;
+                case LogType.Warning:
+                    Warning(logString, "Default Unity Compiler");
+                    break;
+                default:
+                    break;
+            }
+
+            Log(stackTrace, null, "Default Unity Stack Trace");
+
+        }
 
         //setup base folder
         internal static void SetupDirectory()
@@ -66,7 +100,7 @@ namespace OModAPI
         public static void SetUIPanelEnabled(string _panel, bool _enabled)
         {
             DebugBox temp;
-            if (PanelExistTest(FindUIPanel(_panel, true, true), "Toggle UI", out temp))
+            if (PanelExistTest(FindUIPanel(_panel, true), "Toggle UI", out temp))
             {
                 temp.SetGUIEnabled(_enabled);
             }
@@ -76,7 +110,7 @@ namespace OModAPI
         public static void ClearUIPanel(string _panel)
         {
             DebugBox temp;
-            if (PanelExistTest(FindUIPanel(_panel, true, true), "Clear UI", out temp))
+            if (PanelExistTest(FindUIPanel(_panel, true), "Clear UI", out temp))
             {
                 temp.ClearText();
             }
@@ -86,14 +120,14 @@ namespace OModAPI
         public static void SetPanelWriteToDisk(string _panel, bool _writeToDisk)
         {
             DebugBox temp;
-            if (PanelExistTest(FindUIPanel(_panel, _writeToDisk, true), "Toggle UI Write to disk", out temp))
+            if (PanelExistTest(FindUIPanel(_panel, true), "Toggle UI Write to disk", out temp))
             {
                 temp.SetWriteToDisk(_writeToDisk);
             }
         }
 
         //try to return existing DebugBox
-        internal static DebugBox FindUIPanel(string _panel = "Default", bool _writeToDisk = true, bool justSearching = false)
+        internal static DebugBox FindUIPanel(string _panel = "Default", bool justSearching = false)
         {
             DebugBox ret;
 
@@ -109,7 +143,7 @@ namespace OModAPI
             }
 
             //return newly created debug
-            return CreateUIPanel(new Rect(400, 400, 400, 400), _panel, _writeToDisk);
+            return CreateUIPanel(new Rect(400, 400, 400, 400), _panel);
 
         }
 
@@ -120,7 +154,7 @@ namespace OModAPI
         }
 
         //create debug box
-        internal static DebugBox CreateUIPanel(Rect _rect, string _panel = "Default", bool _writeToDisk = true, bool _enabledOnCreation = true)
+        internal static DebugBox CreateUIPanel(Rect _rect, string _panel = "Default", bool _writeToDisk = true, bool _enabledOnCreation = false)
         {
             DebugBox ret;
 
@@ -150,7 +184,7 @@ namespace OModAPI
         {
             //grab DebugBox
             DebugBox temp;
-            if (PanelExistTest(FindUIPanel(_panel, true, true), "Destroy UI", out temp))
+            if (PanelExistTest(FindUIPanel(_panel, true), "Destroy UI", out temp))
             {
                 temp.OnApplicationQuit();
                 debugPanels.Remove(_panel);
@@ -158,7 +192,7 @@ namespace OModAPI
         }
 
         //Log text in given color or default to white
-        public static void Log(object _obj, string _color = "ffffffff", string _panel = "Default", bool _writeToDisk = true)
+        public static void Log(object _obj, string _color = "ffffffff", string _panel = "Default")
         {
             //Test if appropriate color has been given
             if (_color == null || _color.Length != 8)
@@ -175,20 +209,20 @@ namespace OModAPI
             }
 
             //find _chatPanel with _panel name then add text to it
-            DebugBox _chatPanel = FindUIPanel(_panel, _writeToDisk);
+            DebugBox _chatPanel = FindUIPanel(_panel);
             _chatPanel.AddText(_obj.ToString(), _color);
         }
 
         //log text in yellow
-        public static void Warning(object _obj, string _panel = "Default", bool _writeToDisk = true)
+        public static void Warning(object _obj, string _panel = "Default")
         {
-            Log(_obj, "ffff00ff", _panel, _writeToDisk);
+            Log(_obj, "ffff00ff", _panel);
         }
 
         //log text in red
-        public static void Error(object _obj, string _panel = "Default", bool _writeToDisk = true)
+        public static void Error(object _obj, string _panel = "Default")
         {
-            Log(_obj, "ff0000ff", _panel, _writeToDisk);
+            Log(_obj, "ff0000ff", _panel);
         }
     }
 
