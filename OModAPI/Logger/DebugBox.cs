@@ -84,7 +84,7 @@ namespace OModAPI
                     OLogger.SetupDirectory();
                     writer = new StreamWriter("mods/Debug/" + BoxName + ".txt", true);
                 }
-                writer.WriteLine("Message: " + _msg + ", " + msgCount.ToString());
+                writer.WriteLine(msgCount.ToString() + " :Message: " + _msg);
             }
 
             msgCount++;
