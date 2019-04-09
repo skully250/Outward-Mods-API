@@ -29,7 +29,7 @@ namespace OModAPI
 
         private StreamWriter writer;
 
-        public DebugBox(string _boxName, Rect _rect, int _maxStoredLines, int _GUIID, bool _writeToDisk = true)
+        public DebugBox(string _boxName, Rect _rect, int _maxStoredLines, int _GUIID, bool _writeToDisk)
         {
             //setup basic variables required
             BoxName = _boxName;
@@ -74,7 +74,7 @@ namespace OModAPI
         internal void AddText(string _msg, string _msgColor)
         {
 
-            textLines.Insert(0, new DebugType(_msg + ", " + msgCount.ToString(), _msgColor));
+            textLines.Insert(0, new DebugType(msgCount.ToString() + ": " + _msg , _msgColor));
 
             //debug info to file
             if (writeToDisk)
@@ -158,53 +158,17 @@ namespace OModAPI
             {
                 //check if output is past a certain length to stop the
                 //text getting cut off mid way
-                if (output.Length > 3000)
+                if (output.Length + textLines[a].message.Length > 3000)
                 {
-                    if (output.Length > 6000)
-                    {
-
-                        OLogger.CreateLog(new Rect(Screen.width - 400, 50, 400, 400), "Time to split tester", false, true);
-                        float curTime = Time.time;
-                        //get how many characters passed this is
-                        int charactersPassed = output.Length - 6000;
-
-                        //split to character array 
-                        string[] outputSplit = output.Split('>');
-                        char[] lastLineSplit = outputSplit[outputSplit.Length].ToCharArray();
-
-                        //set end of array to nothing
-                        outputSplit.SetValue("", outputSplit.Length - 1);
-
-                        //calculate how many characters need to be copied
-                        int length = (lastLineSplit.Length - charactersPassed) - 10;
-
-                        //loop through character array and copy values
-                        char[] lastLineRecreated = new char[length];
-                        for (int charFill = 0; charFill < length; charFill++)
-                        {
-                            lastLineRecreated[charFill] = lastLineSplit[charFill];
-                        }
-
-                        //loop through strings and setup output string
-                        if (outputSplit.Length > 0)
-                        {
-                            output = "";
-                            for (int stringToAdd = 0; stringToAdd < outputSplit.Length; stringToAdd++)
-                            {
-                                output += outputSplit[stringToAdd];
-                            }
-
-                            //add ending </color> to line
-                            output += new string(lastLineRecreated) + "</color>";
-                        }
-
-                        OLogger.Log((Time.time - curTime).ToString(), null, "Time to split tester");
-                    }
                     break;
                 }
-                //add color + message + newline to text
-                output += (msgCount - a).ToString() + ": <color=#" + textLines[a].messageColor + ">" + textLines[a].message + "</color>";
-                output += Environment.NewLine;
+                else
+                {
+                    //add color + message + newline to text
+                    output += "<color=#" + textLines[a].messageColor + ">" + textLines[a].message + "</color>";
+                    output += Environment.NewLine;
+                }
+
             }
 
             //print text and then end the area
