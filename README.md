@@ -1,10 +1,10 @@
 # Outward-Mods-API
 
 ## User Installation
-Download the API from the Nexus, unzip the file and place the .dll file into "Outward\Mods\". Mods will now be able to use functions provided.
+Download the API from the Nexus or Github Releases, unzip the file and place the .dll file into "Outward\Mods\". Mods will now be able to use functions provided.
 
 ## Developer Installation
-Download the API from the Nexus, unzip the file and place it somewhere. Then add a Reference to it in Visual Studio. 
+Download the API from the Nexus or Github Releases, unzip the file and place it somewhere. Then add a Reference to it in Visual Studio. 
 Add `using OModAPI` to the files you want to use the API in.
 
 ## ConfigHelper Example
@@ -13,7 +13,7 @@ public void Initialize()
 {
 	// Read config file
 	ConfigHelper configHelper = new ConfigHelper(ConfigHelper.ConfigModes.CreateIfMissing, "FileNameHere.xml");
-	configHelper.XMLDefaultConfig = "<config><baseSneakSpeed>0.7</baseSneakSpeed><stealthTrainingBonus>1.3</stealthTrainigBonus></config>";
+	configHelper.XMLDefaultConfig = "<config><baseSneakSpeed>0.7</baseSneakSpeed><stealthTrainingBonus>1.3</stealthTrainingBonus></config>";
 
 	Debug.Log("Trying to load " + configHelper.FullPath);
 
