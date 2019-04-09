@@ -46,5 +46,41 @@ public void detectMovementInputs(On.LocalCharacterControl.orig_DetectMovementInp
 	
 	// Calling a method with parameters
 	StopAutoRun.Invoke(self, new object[] { param1, param2 ...});
+}
+```
+
+## OLogger Example
+```csharp
+
+//Here is the Log function:
+public static void Log(object _obj, string _color = "ffffffff", string _panel = "Default", bool _writeToDisk = true)
+
+//_obj is the object you want to display, it will be turned into a string in the log function.
+//_color is the color that the text will be.
+//_panel is the panel that the text will be output to.
+
+//_writeToDisk is whether you want to output any text in this panel to a file in "mods/Debug/'PanelName'.txt"
+//treat writing to disk in an update loop the same as calling Debug.Log.
+
+//Other functions:
+
+//This isn't actually needed as .Log will create a panel, however, this give you control over the writeToDisk/enabled
+//OLogger.CreateLog(Rect _rect, string _panel = "Default", bool _writeToDisk = true, bool _enabledOnCreation = true);
+
+//OLogger.ClearUIPanel(string _panel); //this will clear the text in the "_panel" panel
+//OLogger.SetUIPanelEnabled(string _panel, bool _enabled); //this will set the panel "_panel" to "enabled"
+
+//OLogger.DestroyUIPanel(string _panel); //this will destroy the "_panel" panel;
+
+//OLogger.Warning(object _obj, string _panel = "Default", bool _writeToDisk = true); //this will output yellow text to the "_panel" panel
+//OLogger.Error(object _obj, string _panel = "Default", bool _writeToDisk = true); //this will output red text to the "_panel" panel
+
+//Example:
+public void Update()
+{
 	
+	//Call Log		"Message to log"		"Text color to log"		"Panel to log to"	"Write to disk"
+	OLogger.Log("Hey this is a normal log", 	"ffffffff",				 "Default", 		false);
+
+}
 ```
