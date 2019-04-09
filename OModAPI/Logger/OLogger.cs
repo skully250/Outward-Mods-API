@@ -14,10 +14,13 @@ namespace OModAPI
         private static int currentGUIID = 0;
         private static GameObject m_obj;
 
+        //store Unity Debug ignore data
         public static IgnoreData ignoreList = new IgnoreData();
 
+        //function to hook into so OLogger can debug as Unity
         public static void DebugMethodHook(string logString, string stackTrace, LogType type)
         {
+            //check if current log string is in ignore list
             foreach (string _toCheck in ignoreList.ignoreInDefaultCompiler)
             {
                 if (logString.Contains(_toCheck))
@@ -26,6 +29,7 @@ namespace OModAPI
                 }
             }
 
+            //switch type of log into correct colors
             switch (type)
             {
                 case LogType.Assert:
@@ -47,6 +51,7 @@ namespace OModAPI
                     break;
             }
 
+            //log the stack trace to panel
             Log(stackTrace, null, "Default Unity Stack Trace");
 
         }
