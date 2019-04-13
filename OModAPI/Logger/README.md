@@ -44,8 +44,8 @@ public void Start()
 
 	//Add ignores to OLogger ignore list (will filter out from Unity's Debug calls)
 	OLogger.ignoreList.AddToIgnore("Internal", "Failed to create agent"
-								  , "is registered with more than one LODGroup"
-								  , "No AudioManager"); 
+						, "is registered with more than one LODGroup"
+						, "No AudioManager"); 
 	//ignores can also be removed by calling OLogger.ignoreList.RemoveFromIgnore()
 
 	//Finally hook OLogger onto logMessageReceived to receive Unity's Debug calls
