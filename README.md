@@ -50,8 +50,4 @@ public void detectMovementInputs(On.LocalCharacterControl.orig_DetectMovementInp
 ```
 
 ## OLogger Example
-```csharp
-
 [Check the Logger folder for documentation](OModAPI/Logger)
-
-```
