@@ -10,18 +10,20 @@ namespace OModAPI
     public static class OLogger
     {
         //store debug box variables
-        private static Dictionary<string, DebugBox> debugPanels = new Dictionary<string, DebugBox>();
-        private static int currentGUIID = 0;
+        private static Dictionary<string, DebugBox> m_debugPanels = new Dictionary<string, DebugBox>();
+        private static int m_currentGUIID = 0;
         private static GameObject m_obj;
 
         //store Unity Debug ignore data
         public static IgnoreData ignoreList = new IgnoreData();
 
+        public static int maxSetupTextTime = 3;
+
         //function to hook into so OLogger can debug as Unity
         public static void DebugMethodHook(string logString, string stackTrace, LogType type)
         {
             //check if current log string is in ignore list
-            foreach (string _toCheck in ignoreList.ignoreInDefaultCompiler)
+            foreach (string _toCheck in ignoreList.m_ignoreInDefaultCompiler)
             {
                 if (logString.Contains(_toCheck))
                 {
@@ -50,10 +52,6 @@ namespace OModAPI
                 default:
                     break;
             }
-
-            //log the stack trace to panel
-            Log(stackTrace, null, "Default Unity Stack Trace");
-
         }
 
         //setup base folder
@@ -104,7 +102,7 @@ namespace OModAPI
         //set the panel UI on/off
         public static void SetUIPanelEnabled(string _panel, bool _enabled)
         {
-            DebugBox temp;
+            DebugBox temp = null;
             if (PanelExistTest(FindUIPanel(_panel, true), "Toggle UI", out temp))
             {
                 temp.SetGUIEnabled(_enabled);
@@ -114,7 +112,7 @@ namespace OModAPI
         //clear text of a panel UI
         public static void ClearUIPanel(string _panel)
         {
-            DebugBox temp;
+            DebugBox temp = null;
             if (PanelExistTest(FindUIPanel(_panel, true), "Clear UI", out temp))
             {
                 temp.ClearText();
@@ -124,7 +122,7 @@ namespace OModAPI
         //set the panel's writeToDisk on/off
         public static void SetPanelWriteToDisk(string _panel, bool _writeToDisk)
         {
-            DebugBox temp;
+            DebugBox temp = null;
             if (PanelExistTest(FindUIPanel(_panel, true), "Toggle UI Write to disk", out temp))
             {
                 temp.SetWriteToDisk(_writeToDisk);
@@ -134,10 +132,10 @@ namespace OModAPI
         //try to return existing DebugBox
         internal static DebugBox FindUIPanel(string _panel = "Default", bool justSearching = false)
         {
-            DebugBox ret;
+            DebugBox ret = null;
 
             //check if debugPanel exists
-            if (debugPanels.TryGetValue(_panel, out ret))
+            if (m_debugPanels.TryGetValue(_panel, out ret))
             {
                 return ret;
             }
@@ -148,26 +146,22 @@ namespace OModAPI
             }
 
             //return newly created debug
-            return CreateUIPanel(new Rect(400, 400, 400, 400), _panel);
+            return CreateUIPanel(new Rect(400, 400, 400, 400), _panel, true, true);
 
         }
 
         //expose function to create panel
         public static void CreateLog(Rect _rect, string _panel = "Default", bool _writeToDisk = true, bool _enabledOnCreation = true)
         {
-            CreateUIPanel(_rect, _panel, _writeToDisk, _enabledOnCreation);
+            if (FindUIPanel(_panel, true) == null)
+            {
+                CreateUIPanel(_rect, _panel, _writeToDisk, _enabledOnCreation);
+            }
         }
 
         //create debug box
         internal static DebugBox CreateUIPanel(Rect _rect, string _panel = "Default", bool _writeToDisk = true, bool _enabledOnCreation = false)
         {
-            DebugBox ret;
-
-            //try to see if panel exists
-            if (debugPanels.TryGetValue(_panel, out ret))
-            {
-                return ret;
-            }
 
             //check if master object is needed
             SetupObject();
@@ -176,23 +170,24 @@ namespace OModAPI
             GameObject DebugObj = new GameObject("DebugObj");
             GameObject.DontDestroyOnLoad(DebugObj);
             DebugObj.transform.parent = m_obj.transform;
-            ret = DebugObj.AddComponent<DebugBox>(new DebugBox(_panel, _rect, 100, currentGUIID++, _writeToDisk));
+
+            DebugBox ret = DebugObj.AddComponent<DebugBox>(new DebugBox(_panel, _rect, 100, m_currentGUIID++, _writeToDisk));
             ret.SetGUIEnabled(_enabledOnCreation);
 
-
             //add panel then return
-            debugPanels.Add(_panel, ret);
+            m_debugPanels.Add(_panel, ret);
             return ret;
         }
 
         public static void DestroyUIPanel(string _panel)
         {
             //grab DebugBox
-            DebugBox temp;
+            DebugBox temp = null;
             if (PanelExistTest(FindUIPanel(_panel, true), "Destroy UI", out temp))
             {
                 temp.OnApplicationQuit();
-                debugPanels.Remove(_panel);
+                GameObject.Destroy(temp.gameObject);
+                m_debugPanels.Remove(_panel);
             }
         }
 
