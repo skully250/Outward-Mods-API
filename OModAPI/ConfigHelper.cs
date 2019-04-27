@@ -8,13 +8,13 @@ namespace OModAPI
     public class ConfigHelper
     {
         // Default path is Outward/Config
-        private string basePath = Path.Combine(Directory.GetCurrentDirectory(), "Config");
+        private string basePath = Path.Combine(Directory.GetCurrentDirectory(), "BepInEx\\config");
         private string configName;
         // Default mode is read only
         private ConfigModes mode = ConfigModes.ReadOnly;
         private XmlDocument configDoc;
         private string xmlConfigDefault;
-        private string configDirectory = "\\Config";
+        private string configDirectory = "\\BepInEx\\config";
         private FileSystemWatcher directoryWatcher = new FileSystemWatcher();
         private FileSystemWatcher fileWatcher = new FileSystemWatcher();
 
@@ -88,11 +88,11 @@ namespace OModAPI
             {
                 configDoc.Load(FullPath);
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 throw new FileNotFoundException("Can't find config file: " + FullPath);
             }
-            catch(XmlException e)
+            catch (XmlException e)
             {
                 // Do nothing, which is bad practice
             }
@@ -152,7 +152,7 @@ namespace OModAPI
 
             XmlNode curNode = configDoc;
             XPathNavigator nav = configDoc.CreateNavigator();
-            foreach(string s in paths)
+            foreach (string s in paths)
             {
                 // Skip blank paths
                 if (s.Equals(""))
@@ -171,7 +171,7 @@ namespace OModAPI
             }
             // Set the value at the end
             nav.SetValue(value);
-            
+
             // Save the resulting changes
             configDoc.Save(FullPath);
         }
@@ -190,7 +190,7 @@ namespace OModAPI
                 // This is okay to do because we never get here unless the config file doesn't exist
                 File.WriteAllText(FullPath, xmlConfigDefault);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 // This is bad practice, but I want to make sure the exception gets passed up to the individual mod
                 // so people don't think it's the API's fault.
