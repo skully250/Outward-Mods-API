@@ -1,10 +1,10 @@
 # Outward-Mods-API
 
 ## User Installation
-Download the API from the Nexus or Github Releases, unzip the file and place the .dll file into "Outward\Mods\". Mods will now be able to use functions provided.
+Download the API from the Nexus or Github Releases, unzip the file and place the .dll file into your mod location directory. For Partiality this is "Outward\Mods\", for BepInEx this is "Outward/BepInEx/plugins". Mods will now be able to use functions provided.
 
 ## Developer Installation
-Download the API from the Nexus or Github Releases, unzip the file and place it somewhere. Then add a Reference to it in Visual Studio. 
+Download the API from the Nexus or Github Releases, unzip the file and place it somewhere. Then add a Reference to it in Visual Studio.
 Add `using OModAPI` to the files you want to use the API in.
 
 ## ConfigHelper Example
@@ -19,7 +19,7 @@ public void Initialize()
 
 	float baseSneakSpeed = configHelper.ReadFloat("/config/baseSneakSpeed");
 	float stealthTrainingBonus = configHelper.ReadFloat("/config/stealthTrainingBonus");
-	
+
 	configHelper.WriteValue("/config/test", "write value 1");
 
 	for(int i = 0; i < 10; ++i)
@@ -42,13 +42,13 @@ public void detectMovementInputs(On.LocalCharacterControl.orig_DetectMovementInp
 {
 	// Reading variable
 	if ((bool)m_autoRun.GetValue(self))
-	
+
 	// Setting variable
 	m_autoRun.SetValue(self, false);
-	
+
 	// Calling a method with no parameters
 	StopAutoRun.Invoke(self, null);
-	
+
 	// Calling a method with parameters
 	StopAutoRun.Invoke(self, new object[] { param1, param2 ...});
 }
